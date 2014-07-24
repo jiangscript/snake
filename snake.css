@@ -1,0 +1,22 @@
+
+
+.cell {
+	width: 12px;
+	height: 12px;
+	display: inline-block;
+	border: 1px black solid;
+	font-size: 50%;
+}
+
+.snake {
+	background-color: green;
+}
+
+.food {
+	background-color: red;
+}
+#game {
+	width: 560px;
+	margin: auto;
+	line-height: 0;
+}
