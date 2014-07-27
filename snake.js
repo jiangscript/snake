@@ -1,44 +1,10 @@
 var GRID_SIZE = 40; // Sets numbers of rows and columns.
 
-var grid = []; // Creates the empty grid array.
-
 // Snake object - including starting position, direction and segments array.
 var snake = {
 	direction: "r",
 	segments: [[20,20]]
 }
-
-// Populate grid with spaces initially.
-for (var row = 0; row <= GRID_SIZE; row++) {
-	grid[row] = []; // Put an empty 'row' array into the 'grid' array 40 times.
-	for (var col = 0; col <= GRID_SIZE; col++) {
-		grid[row][col] = ' '; // Inside each 'row' array, put a 'col' array that contains an empty space 40 times.
-	}
-}
- // Render grid on the page.
- var render = function() {
- 	//console.log('snake? SNAKE!!', snake.position);
- 	$('#game').empty();
- 	for (var row = 0; row < GRID_SIZE; row++) { 	// For each row, and
-		for (var col = 0; col < GRID_SIZE; col++) { // For each column:
-			var $cell = $('<div class="cell"></div>');  // Create jquery element $cell, being a div with the class 'cell'.
-			for (var i = 0; i < snake.segments.length; i++) { // Loop through each array in snake.segments.
-				var segment = snake.segments[i]; // Create 'segment' variable to be i'th element in array.
-				if (segment[0] == row && segment[1] == col) {
-					$cell.addClass('snake'); // Give snake position cell the class of 'snake'.  
-					// if (colour) {
-					// 	$cell.css('background-color', colour);
-					//}
-				}
-			}
-			
-			if (grid[row][col] == "F") { // If cell contains "F", 
-				$cell.addClass('food');	 // give it the class of 'food'.
-			}
-			$('#game').append($cell); // In the div with the ID of 'game', append the $cell html above for each row and column. Each time the loops run, this makes a $cell the last child element of the #game div. 
-		}
-	}
- }
 
 // Add food to the grid by choosing a random row and random column, place "F" in cell.
 var addFood = function() {
@@ -46,8 +12,37 @@ var addFood = function() {
 	var randRow = Math.floor(Math.random() * GRID_SIZE);
 	// random Column
 	var randCol = Math.floor(Math.random() * GRID_SIZE);
-	grid[randRow][randCol] = "F";
+	
+	food = {
+		row: randRow,
+		col: randCol
+	};
 }
+
+var food = null;
+addFood(); // Create first food. 
+
+ // Render a grid on the page with food and snake.
+ var render = function() {
+ 	$('#game').empty();
+ 	for (var row = 0; row < GRID_SIZE; row++) { 	// For each row, and
+		for (var col = 0; col < GRID_SIZE; col++) { // For each column:
+			var $cell = $('<div class="cell"></div>');  // Create jquery element $cell, being a div with the class 'cell'.
+			for (var i = 0; i < snake.segments.length; i++) { // Loop through each array in snake.segments.
+				var segment = snake.segments[i]; // Create 'segment' variable to be i'th element in array.
+				if (segment[0] == row && segment[1] == col) {
+					$cell.addClass('snake'); // Show snake.  
+				}
+			}
+			
+			if (food.row == row && food.col == col) { // If the cell contains food,
+				$cell.addClass('food');				  // display on screen.
+			}
+
+			$('#game').append($cell); // Render square. 
+		}
+	}
+ }
 
 // In each turn, move snake and render screen again.
 var turn = function() {
@@ -55,6 +50,17 @@ var turn = function() {
 	render();
 }
 
+var eat = function() {
+	if (food.row == snake.segments[0][0] && food.col == snake.segments[0][1]) {
+		addFood();
+		delay = delay * 0.8;	
+		clearInterval(turnID); 
+		turnID = setInterval(turn, delay);
+	} else {
+		snake.segments.pop(); // Removes final segment if snake doesn't eat (otherwise it grows).
+	}
+
+}
 // Move function that responds to snake's direction (Set below in switch statement) and ends game if snake goes off the grid.
 var move = function() {
 	var head = [snake.segments[0][0], snake.segments[0][1]]; // Copy current head into a new array.	
@@ -74,13 +80,9 @@ var move = function() {
 	}
 	snake.segments.unshift(head); // 'Unshift' new head array into the first position of snake.segments array having moved it according to the direction.
 
-	// Eating food
-	if (grid[snake.segments[0][0]][snake.segments[0][1]] == "F") {
-			grid[snake.segments[0][0]][snake.segments[0][1]] = " ";	
-			addFood();
-	} else {
-		snake.segments.pop(); // Removes final segment if snake doesn't eat (otherwise it grows).
-	}
+	// Eat
+	eat();
+
 	// Game over if snake runs into itself.
 	for (var i = 1; i < snake.segments.length; i++) { // Loop through each array in snake.segments.
 			var segment = snake.segments[i]; // Create 'segment' variable to be i'th element in array
@@ -92,17 +94,17 @@ var move = function() {
 	console.log(snake.segments[0]);		
 	// Game over if snake goes off the grid.
 	if ((snake.segments[0][0] >= GRID_SIZE) ||
-		(snake.segments[0][0] <= 0)  		||
+		(snake.segments[0][0] < 0)  		||
 		(snake.segments[0][1] >= GRID_SIZE) || 
-		(snake.segments[0][1] <= 0)) {
+		(snake.segments[0][1] < 0)) {
 			$('body').html('<h1>SNAKE? SNAAAAKE!</h1><p>game over.</p>'); 
 			clearInterval(turnID); // Stop further executions of the turnID function.
 	}
 }
 
-// Call the addFood function for the first time, set each turn at 300 milliseconds
-addFood();
-var turnID = setInterval(turn, 300);
+// Set each turn at 300 milliseconds
+var delay = 300;
+var turnID = setInterval(turn, delay);
 
 // Listen for keyboard input to change the snake's direction:
 $(document).keydown(function(key) {
@@ -137,10 +139,3 @@ $(document).keydown(function(key) {
 			break;			
 	}
 })
-
-// var colour = null;
-// $("#snakecolour").change(function(){
-// 	colour = $(this).val();
-// 	$('.snake').css('background-color', colour);
-// })
-
